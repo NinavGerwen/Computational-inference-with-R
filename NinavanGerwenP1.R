@@ -96,3 +96,6 @@ final_dataset <- all_animals[!duplicated(all_animals), ]      # create the final
 ## Question 9
 
 test <- unique(all_animals)       # Yes, unique() would have also worked, as it returns any data frame with duplicate elements removed
+
+detach(Animals)
+detach(mammals)
