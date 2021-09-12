@@ -90,6 +90,9 @@ attach(mammals)
 all_animals <- rbind(Animals, mammals)                        # create a new dataset which is the combination of Animals and mammals
 duplicated(all_animals)                                       # check which values in the combined dataset are duplicated
 
-final_dataset <- all_animals[!duplicated(all_animals), ]      # create the final dataset, which is the combined dataset which are NOT (!) duplicated
+final_dataset <- all_animals[!duplicated(all_animals), ]      # create the final dataset, which consists of all elements in the combined dataset 
+                                                              # which are NOT (!) duplicated
 
-final_dataset <- 
+## Question 9
+
+test <- unique(all_animals)       # Yes, unique() would have also worked, as it returns any data frame with duplicate elements removed
