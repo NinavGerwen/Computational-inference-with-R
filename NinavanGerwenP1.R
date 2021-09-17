@@ -32,6 +32,7 @@ print(Array_A)
 Array_A[dim = 3, 1, 1]
 # To select the elements in the second column of the second slide:
 Array_A[dim = c(1:3), 2, 2]
+Array_A[,2,2]                 # This also works, no need to specify dim()
 
 ## Exercise B: Manipulating and displaying data
 
