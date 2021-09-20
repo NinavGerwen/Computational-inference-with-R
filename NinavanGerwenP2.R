@@ -111,4 +111,67 @@ splom(~USArrests | state.region)
 
 ## Exercise 4: More graphics
 
+#4.1: 
+# I loaded the Rdata file into my global workspace and then wrote this code, meaning I don't have to use attach() or with()
+library(ggplot2)
 
+load("ChildIQ.RData")
+
+summary(ChildData)      # gives numerical information (mean, median, range, etc.) on all variables 
+dim(ChildData)          # shows the number of observations and variables
+str(ChildData)          # displays the internal structure of the data frame (whether the variables are numerical, integers, etc.)
+head(ChildData)         # returns the first part of the data frame, the heading if you will
+
+ChildData$mom.hs <- as.factor(ChildData$mom.hs)   # recode the variable mom.hs as a factor with 2 levels (0 for no, 1 for yes)
+
+#4.2:
+
+ggplot(data = ChildData, aes(x = mom.iq, y = kid.score)) + geom_point()
+
+# call on ggplot to make a plot, with ChildData as the dataset, mother's IQ on x-axis, and kid's IQ on y-axis, state geom_point()
+# as we are looking for a scatterplot
+
+#4.3:
+
+plot_a <- ggplot(data = ChildData, aes(x = mom.iq, y = kid.score)) + geom_point() + 
+  labs(x = "Mother's IQ Score", y = "Child's IQ Score")
+
+plot_a
+
+# I create a plot with ggplot with ChildData as its dataframe, the right axes and also label both axes
+
+#4.4:
+  
+plot_b <- ggplot(data = ChildData, aes(x = mom.iq, y = kid.score)) + 
+  geom_point(shape = 21, colour = "black", fill = "grey", size = 1, stroke = 1) +
+  labs(x = "Mother's IQ Score", y = "Child's IQ Score")
+
+plot_b
+
+# I created the same plot as before, however, now I add to the geom_point argument the shape, colour, fill colour, and size it should use
+
+#4.5:
+coef(lm(kid.score ~ mom.iq, data = ChildData)) 
+
+# look up the intercept and slope coefficients of child's IQ dependent on mom's IQ
+
+plot_c <- ggplot(ChildData, aes(mom.iq, kid.score)) + 
+  geom_point(shape = 21, colour = "black", fill = "grey", size = 1, stroke = 1) +
+  labs(x = "Mother's IQ Score", y = "Child's IQ Score") +
+  geom_abline(intercept = 25.7997778, slope = 0.6099746)
+
+plot_c
+
+# I created the same plot as in question 4.4, however, now I added a geom_abline into the function with the intercept 
+# and slope gained from the coef() function
+
+#4.6:
+
+plot_final <- ggplot(ChildData, aes(mom.iq, kid.score)) + 
+  geom_point(shape = 21, colour = "black", fill = "grey", size = 1, stroke = 1) +
+  labs(x = "Mother's IQ Score", y = "Child's IQ Score") +
+  geom_abline(intercept = 25.7997778, slope = 0.6099746, colour = "blue", size = 2)
+
+plot_final
+
+# I copied the plot from question 4.5, but I added to the geom_abline argument the new colour and size
