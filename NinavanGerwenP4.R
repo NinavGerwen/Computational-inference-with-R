@@ -100,12 +100,15 @@ with(Animals, cov(Animals))
 
 ## B.4: Getting the correlation matrix
 
+## Calculate the inverse standard deviation (code given in the lecture)
 Inv_SD_D <- sqrt(diag(1/CovarianceMatrix))
 
+## make a diagonal matrix out of the two inverse standard deviation values (adding 0s on the non-diagonal parts)
 Diag_Matrix <- diag(Inv_SD_D, nrow(CovarianceMatrix), ncol(CovarianceMatrix))
 
+## Calculate the correlation matrix by matrixmultiplying the diagonal matrix twice with the covariance matrix
 CorrelationMatrix <- Diag_Matrix %*% CovarianceMatrix %*% Diag_Matrix
 CorrelationMatrix
 
-## Create 
+## check whether the results match the cor() function: they do! 
 with(Animals, cor(Animals))
