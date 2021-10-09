@@ -37,6 +37,7 @@ system.time(column_sums(testmatrix))
 
 ## A.2:
 
+## THIS IS NOT CORRECT, it should be a matrix, and the initial matrix should be transposed for multiplication
 matrixmultiplication <- function(x) {
   if(is.matrix(x) == TRUE) {
     ## create a vector of same row-length as matrix consisting of only 1s
@@ -90,9 +91,9 @@ with(Animals, scale(Animals, center = TRUE, scale = FALSE))
 ## make a matrix out of the centered Animals vector
 cA <- as.matrix(cA)
 ## calculate the SSCP by multiplying the transpose of cA with cA
-SSCP <- t(cA)%*% cA
+SSCP <- t(cA) %*% cA
 ## calculate the covariance atrix by dividing the SSCP by the number of rows of the Animal dataset minus one
-CovarianceMatrix <- SSCP/(nrow(Animals) -1)
+CovarianceMatrix <- SSCP/(nrow(Animals) - 1)
 CovarianceMatrix
 
 ## Check whether it is correct, yes it is!

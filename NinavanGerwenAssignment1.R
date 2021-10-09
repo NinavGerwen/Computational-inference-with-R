@@ -2,23 +2,35 @@
 
 setwd("GitHub/Computational-inference-with-R/")
 
+## loda the proper packages
 library(foreign)
 library(ggplot2)
 library(RColorBrewer)
 
+## check the colour palette i want to use to gain the specific colour codes
 cols <- brewer.pal(11, "RdBu")
 cols
 
-therapy_data <- read.spss("therapy_LONG.sav", to.data.frame = TRUE)
+## load the correct data from a spss file while converting it to a data frame
+therapy_data <- read.spss("Master/Computational inference with R/therapy_LONG.sav", to.data.frame = TRUE)
 
+## gain the descriptive statistics of all variables
+summary(therapy_data)
+summary(therapy_data$anxiety)
+sd(therapy_data$anxiety)
+
+## calculate the correct mean for each condition and each time phase using the aggregate function
 mean_per_two_factors <- aggregate(x = therapy_data$anxiety, by = list(therapy_data$cond, therapy_data$time), FUN = mean)
+## calculate the correct variation for each condition and each time phase using the aggregate function
 variance_per_two_factors <- aggregate(x = therapy_data$anxiety, by = list(therapy_data$cond, therapy_data$time), FUN = var)
 
+## column bind the two newly calculated to a new data set to be used for the plot
 total_data <- cbind(mean_per_two_factors, variance_per_two_factors$x)
 
-## Calculate the standard error for every group on every phase
+## Calculate the standard error for every group on every phase and add it to the data set used for the plot
 total_data$se <- sqrt(total_data$`variance_per_two_factors$x`) / sqrt(30)
 
+## create a plot using ggplot whilst calling for the correct data and dimensinos
 Profile_Plot <- ggplot(data = total_data, aes(x = Group.2, y = x, group = Group.1, colour = Group.1)) +
   ## create points for estimations for each group
   geom_point(shape = 18, size = 2) +

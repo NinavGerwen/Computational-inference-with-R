@@ -1,0 +1,88 @@
+---
+title: "Practical Week 5"
+subtitle: "Statistical Inference with R"
+author: "Nina van Gerwen"
+date: "October 15, 2021"
+output: html_notebook
+---
+
+# Exercise A: Storms
+
+To start, load the tidyverse package and the correct dataset:
+```{r}
+library(tidyverse)
+
+data <- data(storms)
+```
+
+A.1:
+```{r}
+# To find all storms that occured in june: filter the data set for which the month is 6 
+filter(data, month == 6)
+
+# Repeat for storms that occured in april (month == 4) OR (|) may (month == 5)
+filter(data, month == 4 | month == 5)
+
+# To find the storms that occured on a specific day: specify the month AND (&) the day
+filter(data, month == 5 & day == 30)
+
+# To find the storms between may 1st and 15th, specify month == 5 and day within (%in%) 1:15
+filter(data, month == 5 & day %in% c(1:15))
+```
+
+A.2:
+```{r}
+# Arrange the dataset storms by year, months and day (in this order)
+arrange(data, year, month, day)
+```
+
+A.3:
+```{r}
+# Arrange (same as sort) the dataset storm by ascending pressure and then by ascending latitude
+arrange(data, pressure, lat)
+```
+
+A.4:
+```{r}
+# S
+select(data, year:hour)
+
+select(data, !year:hour)
+```
+
+A.5:
+```{r}
+relocate(data, name, category, wind)
+```
+
+A.6:
+```{r}
+# When selecting a variable name once:
+select(data, wind)
+# When selecting a variable name multiple times:
+select(data, wind, wind, wind)
+```
+As you can see, nothing happens when you include the name of a variable multiple times in a select() call. It simply ignores the repetition.
+
+A.7:
+```{r}
+select(data, year:day, wind, ends_with("diameter"))
+```
+
+
+# Exercise B: Diamonds
+
+To start, load the correct package and dataset:
+```{r}
+library(ggplot2)
+
+data(diamonds)
+```
+
+B.1:
+```{r}
+diamonds %>% mutate()
+
+```
+
+
