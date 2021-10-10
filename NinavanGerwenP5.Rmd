@@ -12,61 +12,64 @@ To start, load the tidyverse package and the correct dataset:
 ```{r}
 library(tidyverse)
 
-data <- data(storms)
+data(storms)
 ```
 
 A.1:
 ```{r}
 # To find all storms that occured in june: filter the data set for which the month is 6 
-filter(data, month == 6)
+filter(storms, month == 6)
 
 # Repeat for storms that occured in april (month == 4) OR (|) may (month == 5)
-filter(data, month == 4 | month == 5)
+filter(storms, month == 4 | month == 5)
 
 # To find the storms that occured on a specific day: specify the month AND (&) the day
-filter(data, month == 5 & day == 30)
+filter(storms, month == 5 & day == 30)
 
 # To find the storms between may 1st and 15th, specify month == 5 and day within (%in%) 1:15
-filter(data, month == 5 & day %in% c(1:15))
+filter(storms, month == 5 & day %in% c(1:15))
 ```
 
 A.2:
 ```{r}
 # Arrange the dataset storms by year, months and day (in this order)
-arrange(data, year, month, day)
+arrange(storms, year, month, day)
 ```
 
 A.3:
 ```{r}
 # Arrange (same as sort) the dataset storm by ascending pressure and then by ascending latitude
-arrange(data, pressure, lat)
+arrange(storms, pressure, lat)
 ```
 
 A.4:
 ```{r}
-# S
-select(data, year:hour)
+## to select two columns and all columns inbetween, specify the columns and put a : between them
+select(storms, year:hour)
 
-select(data, !year:hour)
+## to select all columns except two columns and all columns inbetween, add a ! before the specification
+select(storms, !year:hour)
 ```
 
 A.5:
 ```{r}
-relocate(data, name, category, wind)
+## to move variables to the beginning of the dataset, use relocate() and state the variables you want at the beginnin
+relocate(storms, name, category, wind)
 ```
 
 A.6:
 ```{r}
 # When selecting a variable name once:
-select(data, wind)
+select(storms, wind)
 # When selecting a variable name multiple times:
-select(data, wind, wind, wind)
+select(storms, wind, wind, wind)
 ```
 As you can see, nothing happens when you include the name of a variable multiple times in a select() call. It simply ignores the repetition.
 
 A.7:
 ```{r}
-select(data, year:day, wind, ends_with("diameter"))
+## use select() and state the three expressions on which the columns must be selected:
+select(storms, year:day, wind, ends_with("diameter"))
 ```
 
 
@@ -81,8 +84,58 @@ data(diamonds)
 
 B.1:
 ```{r}
-diamonds %>% mutate()
+## to make a new variable and add it to the dataset, use the mutate variable
+## in which you state what the new variable has to be: in this case, it has to be price divided by carat
+diamonds %>% mutate(price_per_carat = price / carat)
+
+## to only keep the new variable and lose the other variables in the dataset, use transmute() instead of mutate()
+diamonds %>% transmute(price_per_carat = price / carat)
 
 ```
+B.2:
+```{r}
+## to gain the mean depth, select the dataset, then use the summarize() command and specify the mean() function of depth
+diamonds %>% summarize(mean_depth = mean(depth))
+```
+
+B.3:
+```{r}
+## with pipe notation
+
+## with the pipe notation, you first select the dataset, then you group by the quality of the cut
+## and finally you summarize through the summarize() command and specify all the information (mean, range, etc.) you want in this command
+
+diamonds %>% group_by(cut) %>%
+  summarize(mean_depth = mean(depth),
+            min_depth = min(depth),
+            max_depth = max(depth),
+            var_depth = var(depth))
+
+## without pipe notation
+
+## without pipe notation, summarizing depth by quality of cut is done by asking for the summary() function while 
+## selecting all elements in a certain category of cut through a boolean expression
+summary(diamonds$depth[diamonds$cut == "Fair"])
+summary(diamonds$depth[diamonds$cut == "Good"])
+summary(diamonds$depth[diamonds$cut == "Very Good"])
+summary(diamonds$depth[diamonds$cut == "Premium"])
+summary(diamonds$depth[diamonds$cut == "Ideal"])
+```
+
+B.4:
+```{r}
+## first, state the correct dataset
+diamonds %>% 
+  ## then, group by the colour variable
+  group_by(color) %>%
+  ## on the variable colour, filter only the categories for which there are more than 3000 observations OR the colour category "J" 
+  filter(n() > 3000 | color == "J") %>%
+  ## create a new variable through mutate that gives the mean price and mean carat per colour category
+  mutate(mean_price = mean(price),
+         mean_carat = mean(carat))
+```
+
+
+
 
 
