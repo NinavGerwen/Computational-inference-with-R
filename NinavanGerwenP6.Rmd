@@ -1,0 +1,31 @@
+---
+title: "Practical Week 6"
+subtitle: "Statistical Inference with R"
+author: "Nina van Gerwen"
+date: "October 15, 2021"
+output: html_notebook
+---
+
+## Part 1: Tidying the data
+
+```{r}
+library(tidyverse)
+
+vet_data <- read_csv("vet.data.csv")
+
+vet_data <- vet_data %>%
+  pivot_wider(names_from = type, values_from = c(value2017, value2018)) %>%
+  separate(gen_age, into = c("Gender", "Age"), sep = "_")
+
+str(vet_data)
+
+vet_data$client <- as.character(vet_data$client)
+vet_data$food_quality <- as.factor(vet_data$food_quality)
+vet_data$clinic <- as.factor(vet_data$clinic)
+vet_data$Gender <- as.factor(vet_data$Gender)
+vet_data$breed <- as.factor(vet_data$breed)
+vet_data$area <- as.factor(vet_data$area)
+vet_data$Age <- as.numeric(vet_data$Age)
+
+str(vet_data)
+```
