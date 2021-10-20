@@ -10,15 +10,21 @@ output: html_notebook
 
 ```{r}
 library(tidyverse)
+library(ggplot2)
 
 vet_data <- read_csv("vet.data.csv")
 
+## to tidy the dataset
 vet_data <- vet_data %>%
+  ## increase the number of columns by making columns of the two types of weigh ('type') and the values from the 2017 and 2018 value columns 
   pivot_wider(names_from = type, values_from = c(value2017, value2018)) %>%
+  ## seperate the gender and age variable in two different columns
   separate(gen_age, into = c("Gender", "Age"), sep = "_")
 
+## look at the internal structure of the dataframe/tibble 
 str(vet_data)
 
+## when checking the internal structure, I find that a lot of the data types are wrong, so I recode them into the correct type
 vet_data$client <- as.character(vet_data$client)
 vet_data$food_quality <- as.factor(vet_data$food_quality)
 vet_data$clinic <- as.factor(vet_data$clinic)
@@ -27,5 +33,60 @@ vet_data$breed <- as.factor(vet_data$breed)
 vet_data$area <- as.factor(vet_data$area)
 vet_data$Age <- as.numeric(vet_data$Age)
 
+## look at the internal structure again and check if everything is correct
 str(vet_data)
 ```
+## Part 2: Analyse the data
+
+Question 1:
+```{r}
+plot(vet_data$breed)
+plot(vet_data$food_quality)
+plot(vet_data$area)
+
+ggplot(vet_data, aes(x = breed, y = value2017_weight, colour = breed)) + geom_boxplot()
+## the breed with lowest mean weight is the persian cat, the cat with the highest observed weight is an american shorthair for the 2017 values
+```
+Question 2:
+
+```{r}
+vet_data %>%
+  ## group by these two variables
+  group_by(clinic, Gender) %>%
+  ## then summarize and give the mean of both weight values
+  summarize(mean(value2017_weight), mean(value2018_weight))
+```
+Question 3:
+
+```{r}
+vet_data %>%
+  ## filter the values where the weight values are below 2.5
+  filter(!value2017_weight < 2.5 | !value2018_weight < 2.5)
+
+## the unique client ID's that have been influenced are client 16 on clinic 7, client 12 on clinic 9 and client 17 on clinic 13
+```
+Question 4:
+
+```{r}
+vet_data %>%
+  ## turn both values from lbs to kgs
+  mutate(value2017_kg = value2017_weight/2.05) %>%
+  mutate(value2018_kg = value2018_weight/2.05) %>%
+  ## select all columns that are not the old weight columns
+  select(!value2017_weight) %>%
+  select(!value2018_weight)
+```
+Question 5:
+
+```{r}
+vet_data %>% 
+  ## count the unique values of the two combinations
+  count(area, food_quality) %>% 
+  ## create a ggplot with the correct dimensions
+  ggplot(aes(area, food_quality)) +
+  ## state that we want a geom_tile() which is filled with colours based on the number of unique values of the two combinations
+  geom_tile(aes(fill=n))
+```
+
+
+
