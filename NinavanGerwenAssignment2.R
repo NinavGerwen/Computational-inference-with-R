@@ -29,7 +29,8 @@ myTtest <- function(x, y) {
   ## Question 4: 
   
   ## create a list of values that we wish to have as output
-  list_of_values <- list(t_test, p_value)
+  list_of_values <- list(t_test, n_x + n_y - 2, p_value, c(mean(x), mean(y)))
+  names(list_of_values) <- c("t-statistic", "degrees of freedom", "p-value", "Group means of x and y respectively")
   ## return the list of values
   return(list_of_values)
 }
@@ -72,39 +73,45 @@ plot(regression_model$fitted.values, regression_model$residuals)
 ## Question 2:
 
 ## The regression coefficients:
-DV <- matrix(gala_data$Species, ncol = 1, nrow = 30)
-IVs <- matrix(c(gala_data$Area, gala_data$Elevation, gala_data$Endemics), ncol = 3, nrow = 30)
+DVEx <- matrix(gala_data$Species, ncol = 1, nrow = 30)
+IVEx <- matrix(c(gala_data$Area, gala_data$Elevation, gala_data$Endemics), ncol = 3, nrow = 30)
 
-b_coefficients <- (solve(t(IVs) %*% IVs)) %*% (t(IVs) %*% DV)
+b_coefficients <- (solve(t(IVEx) %*% IVEx)) %*% (t(IVEx) %*% DVEx)
 b_coefficients
 
 ## The predicted values:
-predicted_values <- IVs %*% b_coefficients
-predicted_values
+predicted_y <- IVEx %*% b_coefficients
+predicted_y
 
 ## The residuals:
-error_residuals <- DV - predicted_values
-error_residuals
+err_residuals <- DVEx - predicted_y
+err_residuals
 
 ## Question 3:
 
 ## First to specify the arguments:
 ## Most importantly, a dataset should be given as input
-## Then from this dataset, the dependent variable (DV) should be specified (column x from the dataset)
-## Then finally  independent variable(s) (IV) should be specified, we use ... because it can be any number of variables/columns
+## Then from this dataset, the dependent variable (DV) should be specified (by default, the first column of the dataset)
+## Then finally  independent variable(s) (IV) should be specified (by default, all columns after the first column)
 
-Regression_Function <- function(data, DV, IVs) { ## question: how to allow IV to be any number of things
+Regression_Function <- function(data, DV = matrix(data[, 1]), IV = data[, 2:ncol(data)]) { ## question: how to allow IV to be any number of things
   ## Descriptive statistics of data:
-  
+  descriptive_statistics <- "nothing for now" 
   ## Regression coefficients, predicted values and residuals using matrix algebra:
-  for(i in 1:ncol(IVs)) { 
-    
   
-  }
-  
+  DV <- matrix(DV, nrow = nrow(data))
+  IV <- matrix(IV, nrow = nrow(data))
+  model_coefficients  <- (solve(t(IV) %*% IV)) %*% (t(IV) %*% DV)
+  predicted_values <- IV %*% model_coefficients
+  error_residuals <- DV - predicted_values
   ## Simple plot of predicted values against the residuals:
-
+  simple_plot <- plot(predicted_values, error_residuals)
+  
+  list_of_information <- list(descriptive_statistics, model_coefficients, predicted_values, error_residuals, simple_plot)
+  names(list_of_information) <- c("Descriptive statistics", "Regression coefficients", "Predicted values", "Error/Residuals", 
+                                  "Simple plot of predicted values against the residuals")
+  ## Finally, the function should return the created list that holds all information
   return(list_of_information)
 }
 
-Regression_Function()
+Regression_Function(data = gala_data, DV = gala_data$Species, IV = c(gala_data$Area, gala_data$Elevation, gala_data$Endemics))
