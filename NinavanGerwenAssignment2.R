@@ -28,7 +28,7 @@ myTtest <- function(x, y) {
   }
   ## Question 4: 
   
-  ## create a list of values that we wish to have as output
+  ## Create a list of values that we wish to have as output
   list_of_values <- list(t_test, n_x + n_y - 2, p_value, c(mean(x), mean(y)))
   names(list_of_values) <- c("t-statistic", "degrees of freedom", "p-value", "Group means of x and y respectively")
   ## return the list of values
@@ -37,7 +37,7 @@ myTtest <- function(x, y) {
 
 ## Question 2: 
 
-## To test whether the results match, create the two factors and run it with both t-tests
+## To test whether the results match, create the two datasets and run it with both t-tests
 CSFI <- c(2,5,5,6,6,7,8,9)
 TFI <- c(1,1,2,3,3,4,5,7,7,8)
 
@@ -59,8 +59,7 @@ setwd("C:/Users/nina-/Documents/GitHub/Computational-inference-with-R/")
 gala_data <- read.csv(file = "gala.txt", sep = " ")
 
 ## Perform the multiple regression through the lm() function specifying the correct variables through the formula 
-## Important to note is that we want to remove the intercept (by using + 0), because otherwise we won't be able to compare the coefficients
-regression_model <- lm(Species ~ Area + Elevation + Endemics + 0, data = gala_data)
+regression_model <- lm(Species ~ Area + Elevation + Endemics, data = gala_data)
 ## Gain the correct statistics/estimates using the summary() function
 summary(regression_model)
 
@@ -74,7 +73,7 @@ plot(regression_model$fitted.values, regression_model$residuals)
 
 ## The regression coefficients:
 DVEx <- matrix(gala_data$Species, ncol = 1, nrow = 30)
-IVEx <- matrix(c(gala_data$Area, gala_data$Elevation, gala_data$Endemics), ncol = 3, nrow = 30)
+IVEx <- matrix(c(gala_data$Area, gala_data$Elevation, gala_data$Endemics, rep(1,30)), ncol = 4, nrow = 30)
 
 b_coefficients <- (solve(t(IVEx) %*% IVEx)) %*% (t(IVEx) %*% DVEx)
 b_coefficients
@@ -92,26 +91,45 @@ err_residuals
 ## First to specify the arguments:
 ## Most importantly, a dataset should be given as input
 ## Then from this dataset, the dependent variable (DV) should be specified (by default, the first column of the dataset)
-## Then finally  independent variable(s) (IV) should be specified (by default, all columns after the first column)
+## Then finally the independent variable(s) (IV) should be specified (by default, all columns except the first column)
 
-Regression_Function <- function(data, DV = matrix(data[, 1]), IV = data[, 2:ncol(data)]) { ## question: how to allow IV to be any number of things
-  ## Descriptive statistics of data:
-  descriptive_statistics <- "nothing for now" 
+Regression_Function <- function(dataset, DV = dataset[, 1], IV = dataset[, 2:ncol(dataset)]) {
+  ## First, we should specify that both the DV and IVs are matrices, otherwise we won't be able to do matrix multiplication
+  DV <- as.matrix(DV)
+  ## For the IV, it is important to also add a column that exists of only 1's so we can get the correct intercept
+  IV <- cbind(rep(1,nrow(dataset)), as.matrix(IV))
+  ## Descriptive statistics of data: we want the sample size and means of all variables in the model
+    Sample_Size <- nrow(dataset)
+    DV_mean <- mean(DV)
+    IV_means <- as.matrix(colMeans(IV[, -1, drop = FALSE]))
+    IV_sds <- as.matrix(apply(IV[, -1], 2, FUN = sd))
+    IV_info <- cbind(IV_means, IV_sds)
+  ## Put all the descriptive statistics in a list and give them aptly names
+  descriptive_statistics <- list(Sample_Size, DV_mean, IV_info)
+  names(descriptive_statistics) <- c("Sample Size", "Mean of the Dependent Variable", 
+                                     "Mean(s) and Standard Deviation(s) - respectively - of the Independent Variable(s)")
+  
   ## Regression coefficients, predicted values and residuals using matrix algebra:
+  ## Copy the above used code for matrix multiplication to gain the correct values
+    model_coefficients  <- (solve(t(IV) %*% IV)) %*% (t(IV) %*% DV)
+    predicted_values <- IV %*% model_coefficients
+    error_residuals <- DV - predicted_values
   
-  DV <- matrix(DV, nrow = nrow(data))
-  IV <- matrix(IV, nrow = nrow(data))
-  model_coefficients  <- (solve(t(IV) %*% IV)) %*% (t(IV) %*% DV)
-  predicted_values <- IV %*% model_coefficients
-  error_residuals <- DV - predicted_values
-  ## Simple plot of predicted values against the residuals:
-  simple_plot <- plot(predicted_values, error_residuals)
+  ## Simple plot of predicted values against the residuals: simply use the plot() function with our newly calculated
+  ## predicted_values and error_residuals
+    simple_plot <- plot(predicted_values, error_residuals)
   
-  list_of_information <- list(descriptive_statistics, model_coefficients, predicted_values, error_residuals, simple_plot)
-  names(list_of_information) <- c("Descriptive statistics", "Regression coefficients", "Predicted values", "Error/Residuals", 
+  ## Now before we return all this info, we put in a list all the information we want to give when the function is called
+  ## This includes the list of descriptive statistics, the model coefficients and the simple plot
+  list_of_information <- list(descriptive_statistics, model_coefficients, simple_plot)
+  ## Furthermore, we give the different parts of the list apt names
+  names(list_of_information) <- c("Descriptive statistics", "Regression coefficients", 
                                   "Simple plot of predicted values against the residuals")
   ## Finally, the function should return the created list that holds all information
   return(list_of_information)
 }
 
-Regression_Function(data = gala_data, DV = gala_data$Species, IV = c(gala_data$Area, gala_data$Elevation, gala_data$Endemics))
+## Question 4:
+
+## Running the function on the tortoise dataset with the correct specifications, the coefficients match
+Regression_Function(data = gala_data, DV = gala_data[, 1], IV = gala_data[, 2:4])
