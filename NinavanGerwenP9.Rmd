@@ -1,0 +1,52 @@
+---
+title: "Practical Week 9"
+subtitle: "Statistical Inference with R"
+author: "Nina van Gerwen"
+date: "November 8th, 2021"
+output: html_notebook
+---
+## Preparing and Entering the data:
+
+```{r}
+set.seed(9)
+V1 <- c(10, 11, 11, 10, 12)
+V2 <- c(12, 10, 14, 13, 12)
+```
+
+## Writing the function
+
+```{r}
+bootstrapping_1000 <- function(X, Y) {
+  ## Calculating the t-test on the sample data (using t.test)
+  initial_t_test <- t.test(X, Y)
+  initial_t_statistic <- initial_t_test$statistic
+  
+  ## create space
+  t_statistic_values <- rep(0, 1000)
+  ## for-loop sampling 100 bootstrap samples by using sample() for both groups
+  for(i in 1:1000) {
+    S1 <- sample(x = X, replace = TRUE)
+    S2 <- sample(x = Y, replace = TRUE)
+    
+    sample_result <- t.test(S1, S2)
+     
+  ## calculating t-statistic for each bootstrap sample
+  t_statistic_values[i] <- sample_result$statistic
+    
+  }
+  ## compute bootstrap 95% confidence interval based on percentiles (use quantiles()) of the 1000 t-statistics
+  CI <- quantile(t_statistic_values, p = c(0.025, 0.975))
+  ## plot histogram of the bootstrap sampling distribution of the t-statistic values
+  t_test_histogram <- hist(t_statistic_values, nclass = 50, main = "Bootstrap distribution of the t-test statistic with 95% Confidence Interval")
+                      abline(v = CI, col = "blue")
+  ## Export appropriate results
+      ## First make a list of all results
+      list_of_information <- list(initial_t_statistic, CI)
+      names(list_of_information) <- c("Initial result of the t-test using the sample data", "95% Confidence Interval of the t-statistic")
+  return(list_of_information)
+  
+}
+
+bootstrapping_1000(V1, V2)
+```
+
