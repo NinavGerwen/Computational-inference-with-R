@@ -26,3 +26,5 @@ MonteCarloIntegration(LB = 0, UB = 1, n = 10000)
 ## It seems to work for lowerbound of 0 and upperbound of 1. As it gives a value
 ## of 34. This value coincides with the standard normal distribution where
 ## around 34% of values are between the the mean and a standard deviation of 1.
+
+ 
