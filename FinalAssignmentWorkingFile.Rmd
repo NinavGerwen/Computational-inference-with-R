@@ -1,6 +1,6 @@
 ---
 title: "Computational Inference with R: Assignment 3"
-author: "Nina van Gerwen, Katja Sonntag"
+author: "Nina van Gerwen (1860852), Katja Sonntag (5262453)"
 date: "12/18/2021"
 output: pdf_document
 ---
@@ -9,85 +9,90 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-Part 1
-
-Exercise 1
 ```{r}
-
-
+set.seed(13)
 ```
 
-Exercise 2
-```{r}
-
-
-```
-
-
-Part 2
-
-Exercise 1
-```{r}
-
-
-```
-
-Exercise 2
-```{r}
-
-
-```
-
-
-Exercise 3
-```{r}
-
-
-```
-
-=======
----
-title: "Computational Inference with R: Assignment 3"
-author: "Nina van Gerwen (1860852), Katja Sonntag"
-date: "12/18/2021"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-
-## Part 1
+## Part 1: Empirical power calculation
 
 ### Exercise 1
+
+Assuming that the data are approximately normally distributed we start by simulating a single two group data sample in accordance with the other assumptions: We expect the control group to have a mean score of 150 and the treatment group to be associated with a mean score of 160 with a standard deviation of 15 for both.
+
 ```{r}
+control_1 <- rnorm(n = 50, mean = 150, sd = 15)
+treatment_1 <- rnorm(n = 50, mean = 160, sd = 15)
 ```
+After simulating the sample in accordance with the above assumptions we now go on to perform a t-test with the inbuilt function and define a 0.01 level of significance. 
+
+```{r}
+t.test(treatment_1, control_1)
+```
+Welch’s t-test, unlike Student’s t-test, does not have the assumption of equal variance (however, both tests have the assumption of normality). When two groups have equal sample sizes and variances, Welch’s t-test tends to give the same result as Student’s. However, when sample sizes and variances are unequal, Student’s t-test is quite unreliable; Welch’s then tends to perform better. The null hypothesis for the test is that the means are equal while the alternate hypothesis for the test is that means are not equal.
+
+What we obtain with the inbuilt function is a t-statistic of 3.1196 and a p-value of 0.00238, which describes the probability that we would see a t-value as large as this one by chance. The interval from 3.25 to 14.62 embodies the range within which the true difference in means will be 95 percent of the time. The mean for the treatment group equals 159 while the mean of the control group is estimated to be 150. Our sample estimates include the mean for the treatment group which equals 158.5 and the mean of 149.6 for the control group. Our statistical analysis shows that the p-value is even lower than our relative strict level of significance of 0.01. This is why we reject the null hypothesis and accept the alternate hypothesis that the means are not equal.
+
+In a nutshell, we conclude that the difference in means for our sample data is 8.9378 (158.5415 - 149.6037), and the confidence interval shows that the true difference in means is between 3.252118 and 14.623483. So, 95 percent of the time, the true difference in means will be different from 0. Our p-value of 0.00238 is much smaller than 0.01, so we can reject the null hypothesis of no difference and say with a high degree of confidence that the true difference in means is not equal to zero. With regards to our sample estimates, however, we can not consider the special training on learning strategies worthwhile for future application, because the mean of the treatment group's test scores is not 10 points higher than the mean score of the control group. We empasize, however, that for 95 percent of the time the true difference in means will be different from 0 and fall into the range from 3.252118 and 14.623483.
 
 ### Exercise 2
+
+What we do in our function to obtain an estimate of the power in this situation is the following: We can fail to reject the null hypothesis if the sample happens to be within the confidence interval we find when we assume that the null hypothesis is true. To get the confidence interval we find the margin of error and then add and subtract it to the proposed mean. We then assume instead that the true mean is at a different, explicitly specified level, and then find the probability a sample could be found within the original confidence interval. This is the same underlying logic of the inibuilt power.t.test function.
+
 ```{r}
+#We perform a t-test 1000 times and determine the power
 t.power <- function(mean1, mean2, n1, n2 = n1, sd1, sd2 = sd1, nsim = 1000){
-  lower = qt(.025,df=sum(n1 + n2) - 2)
-  upper = qt(.975,df=sum(n1 + n2) - 2)
-  ts = replicate(nsim,
+#Obtain confidence intervals, find margin of errors and subtract it to the proposed mean.
+#Important to note is, that these specifications are not limited to a certain number of sample means et.
+  lower <-  qt(.025,df=sum(n1 + n2) - 2)
+  upper <- qt(.975,df=sum(n1 + n2) - 2)
+  ts <- replicate(nsim,
                  t.test(rnorm(n1, mean1, sd1),
                         rnorm(n2, mean2, sd2))$statistic)
   sum(ts < lower | ts > upper) / nsim
 }
 
-set.seed(13)
 t.power(n1 = 50, n2 = 50, mean1 = 150, mean2 = 160, sd1 = 15, sd2 = 15)
-## OR:
+#With our function we find that the power is estimated to be 0.906
+
+#This way of calling the function is clearer
 t.power(mean1 = 150, mean2 = 160, n1 = 50, sd1 = 15)
+
+#Check with inbuilt function and compare the estimates
+power.t.test(n = 50, delta = 10, sd = 15)
+#With the inbuilt function we obtain a power estimate of 0.9099633 (rounding difference).
+#Now we also round
+round(0.9099633, digits=4)
+#In this case the power equals 0.913.
+
+#To compare different degrees of power we define smaller sample seizes....
+t.power(n1 = 10, n2 = 10, mean1 = 150, mean2 = 160, sd1 = 15, sd2 = 15)
+#Now the power decreases to 0.306
+
+#...and we also define larger sample seizes
+t.power(n1 = 150, n2 = 150, mean1 = 150, mean2 = 160, sd1 = 15, sd2 = 15)
+#And with such a large sample seize the power inreases to 99.9 percent
 ```
+In this context, the concept of power embodies the probability of rejecting the null hypothesis when the alternative hypothesis is true. What we find is that the power equals 0.906, thus 90.6 percent. Our function and the inbuilt power.t.test function yield the same result. 
 
+An important assumption for power testing is normality. As soon as the distribution is skewed, smaller sample seizes violating the normality assumption might not be associated with the power suggested in the results, based on calculations which assume that the normality premise is met.
 
-## Part 2
+The effect seize embodies the difference in means. Two premises hold true:
+- The larger the effect seize the larger the power for a specific sample seize. 
+- The larger the effect seize the smaller sample seize needed to yield the same power. 
+If we adjust the sample seize from 50 to 10, the power decreases to only 30.6 percent. if we increase the sample seize from 50 to 150 we achieve 99.9 percent power.
+
+After obtaining with our own function a power estimate of 90.6 percent and a power estimate of 91.3 percent with the inbuilt function we now go on to draw our conclusions: The probability of rejecting the null hypothesis when the alternative hypothesis is true equals 90.6 percent (own function) and 91.3 percent (inbuilt function). To discuss and understand power, one must be clear on the concepts of Type I (rejecting the null hypothesis in favor of a false alternative hypothesis) and Type II errors (failing to reject a false null hypothesis in favor of a true alternative hypothesis). The probability of a Type I error is typically known as Alpha, while the probability of a Type II error is typically known as Beta. Knowing that the power is the probability of avoiding a Type II error, we conclude that in our statistical analysis that probability of avoiding a Type II error equals 90.6 percent (inbuilt function: 91.3 percent).
+
+## Part 2: Resampling techniques
+
+Nowadays, hypothesis testing in the field of statistics can be done in multiple ways. Two of these approaches are the classical statistical approach and the resampling technique approach. In the classical statistic approach, a researcher has strong theoretical assumptions about distributions of the data and can then test certain hypotheses. However, what if the distribution is unknown and no assumptions can be made? For these cases, a researcher can use the resampling technique approach. The key concept of the resampling approach is to resample from your original sample in order to create an empirical sampling distribution. This contrasts with the classical approach, where you assume a theoretical sampling distribution. In short, the resampling approach replaces hard theoretical analyses with more computationally intensive (and perhaps somewhat simpler) methods. In the following part, we will be creating our own resampling technique functions for both hypothesis testing using a t-test and the estimation of the mean difference statistic.
+
+Three common resampling techniques are 'The Jackknife', 'Permutation test' and 'The Bootstrap'. For all the resampling technique, we have chosen to perform a 'Bootstrap' resampling technique. We chose this method due to multiple reasons. First of all, bootstrapping works better on non-smooth statistics, such as the median than the Jackknife. Furthermore, the Bootstrap does not assume either symmetry of the sampling distribution or the exchangeability of observations like the permutation test does. Finally, the Bootstrap can test hypotheses of parameters even if their distributions differ and will always become more accurate as the number of taken resamples increases.
 
 ### Exercise 1:
 
-For the hypothesis test through a resampling technique, we have chosen for the resampling technique 'Bootstrap'. We chose this method, because... REASONS (TO DO).
+Our first created function performs a hypothesis test based on the t-statistic produced by a standard t-test function. The function was created with the use of the sample() function, which can be used to sample from a dataset with or without replacement. In the case of a Bootstrap, sampling is always done with replacement.
+
 ```{r}
 ## Bootstrap function using the sample() function
 
@@ -99,14 +104,15 @@ MyBootstrap <- function(x, y, numtimes = 1000) {
   ## First, the function should save the initial t-value
   initial_t <- t.test(x, y)$statistic
   
-  ## Then, the function creates space for the resampled t-values. :
+  ## Then, the function creates space for the resampled t-values:
   t_values <- rep(0, numtimes)
   
   ## The bootstrap:
     ## For 1 to the specified number of times (default = 1000), do the following:
   for(i in 1:numtimes) {
     ## Create a temporary sample with replacement through the sample() function of 
-    ## all the elements in both x and y
+    ## all the elements in both x and y to make a temporary sample that is of equal size to the 
+    ## size of the concatenated first and second input
     temp_sample <- sample(x = c(x, y), replace = TRUE)
     ## From this temporary sample, the first n1 (= equal to the number of observations in group x) 
     ## of the elements then go to a new vector called S1
@@ -120,19 +126,31 @@ MyBootstrap <- function(x, y, numtimes = 1000) {
     t_values[i] <- t.test(S1, S2)$statistic
   }
   ## Including relevant statistics
-    ## 95% confidence interval of the estimate
+    ## The function should then produce the 95% confidence interval of the empirical sampling distribution
     CI <- quantile(t_values, p = c(0.025, 0.975))
-    ## Histogram with indicators at the 95% confidence interval
+    ## The function should also provide a histogram of the empirical sampling distribution
+    ## with indicators at the 95% confidence interval and the initial t-value
     hist(t_values, nclass = 50, main = "Empirical sampling distribution of the t-statistic with 95% Confidence Interval")
     abline(v = CI, col = "red")
     abline(v = initial_t, col = "blue")
-    ## probability of the initial t-value -- perhaps if-statement
-    p_value <- sum(t_values > abs(initial_t))/numtimes
+    ## Finally, the function should give the probability of finding a value more extreme than
+    ## the initial t-value given the empirical sampling distribution
+    if (initial_t < 0) {
+    ## This is done through an if-statement, where if the initial t-value is below zero:
+      ## the p-value becomes the amount of times the resampled t-values are smaller than the initial t-value
+      ## divided by the total amount of times the t-values have been estimated
+      p_value <- sum(t_values < initial_t)/numtimes
+    } else {
+      ## if the t-value is above zero, the p-value instead becomes the amount of times the 
+      ## resampled t-values are larger than the initial t-value divided by the total amount of
+      ## times the t-values have been estimated
+      p_value <- sum(t_values > initial_t)/numtimes
+    }
     
-    ## Creating a list of all the relevant information and giving them apt names
+    ## Then, we create a list of all the relevant information and give them apt names
     list_of_statistics <- list(initial_t, CI, p_value)
     names(list_of_statistics) <- c("Initial t-statistic", "Upper and lower bound of the 95% C.I. of the empirical sampling distribution", 
-                                   "Probability of the initial t-value given the distribution")
+                                   "Probability of finding a value that is more extreme than the initial t-value given the distribution")
   ## Finally, as output, the function should return the list of relevant information
   return(list_of_statistics)
 
@@ -143,24 +161,29 @@ MyBootstrap <- function(x, y, numtimes = 1000) {
 CSFI <- c(2, 5, 5, 6, 6, 7, 8, 9)
 TFI <- c(1,1,2,3,3,4,5,7,7,8)
 
-## Example using the Flight instruction data
+## Examples using the Flight instruction data
 
+set.seed(13)
+
+MyBootstrap(CSFI, TFI)
 MyBootstrap(CSFI, TFI, 10000)
-
 ```
+Using the Flight instruction data as our example, we can see that increasing the the number of resamples has a positive effect on the empirical sampling distribution as it seems to increasingly approach a normal distribution. Furthermore, we can also see that the initial t-value is within the 95% confidence interval. In other words, if you were to perform a two-tailed test, you could not conclude that there are significant differences in the performance of pilots trained through computer simulated flight instruction (CSFI) or traditional flight instruction (TFI). However, interestingly enough, if one were to perform a one-tailed test and assume that pilots trained through CSFI would perform better with a significance level of .05, the results above would give a significant result, as the *p*-value was .04. Increasing the amount of resamples to 10000, however, again would give a non-significant result. This indicates the variability of the *p*-value and how a researcher is better off to report both *p*-values, confidence intervals and effect sizes. However, important to take into account is the fact that the total sample size in the above-used examples is 18, which might simply be too little to find any significant effect in case of a small effect size. 
 
 ### Exercise 2
+
+Our second created resampling function performs the same hypothesis test as the first created resampling function (i.e., a hypothesis test based on the t-statistic produced by a standard t-test function). However, this function no longer makes use of the sample() function in order to resample. Instead, it uses pseudo-randomly generated numbers from a uniform distribution in order to perform the resampling.
 
 ```{r}
 ## Bootstrap function without the use of the sample() function
 
-## Similar to before, we create a function that can have up to three arguments
+## Similar to before, we create a function that can receive up to three arguments
 ## The first and second arguments should correspond to two numerical vectors
 ## that one wishes to perform a t-test between.
 ## The third argument is the number of times they would like to resample
 ## the statistic of interest. By default this value is 1000.
 Indexed_Bootstrap <- function(x, y, numtimes = 1000) {
-  ## First, the function shoudl store the initial t-value
+  ## First, the function should store the initial t-value
   initial_t <- t.test(x, y)$statistic
   
   ## Then, it should create space for the statistic that is to be resampled:
@@ -208,81 +231,105 @@ Indexed_Bootstrap <- function(x, y, numtimes = 1000) {
   hist(t_values, nclass = 50, main = "Empirical sampling distribution of the t-statistic with 95% Confidence Interval")
   abline(v = CI, col = "red")
   abline(v = initial_t, col = "blue")
-  ## Finally, the function should give the probability of the initial t-value
-  ## given the empirical sampling distribution
-  p_value <- sum(t_values > abs(initial_t))/numtimes
+  ## Finally, the function should give the probability of finding a value more extreme than
+  ## the initial t-value given the empirical sampling distribution
+  if (initial_t < 0) {
+  ## This is done through an if-statement, where if the initial t-value is below zero:
+      ## the p-value becomes the amount of times the resampled t-values are smaller than the initial t-value
+      ## divided by the total amount of times the t-values have been estimated
+    p_value <- sum(t_values < initial_t)/numtimes    
+    } else {
+      ## if the t-value is above zero, the p-value instead becomes the amount of times the 
+      ## resampled t-values are larger than the initial t-value divided by the total amount of
+      ## times the t-values have been estimated
+    p_value <- sum(t_values > initial_t)/numtimes
+    }
+    
   
   ## Then, we create a list of all the relevant information and give all elements apt names
   list_of_statistics <- list(initial_t, CI, p_value)
   names(list_of_statistics) <- c("Initial t-statistic", "Upper and lower bound of the 95% C.I. of the empirical sampling distribution", 
-                                 "Probability of the initial t-value given the distribution")
+                                 "Probability of finding a value that is more extreme than the initial t-value given the distribution")
   ## Finally, as output, the function should return the list of relevant information
   return(list_of_statistics)
 }
 
-## Example using the Flight instruction data
+## Examples using the Flight instruction data
 
+set.seed(13)
+
+Indexed_Bootstrap(CSFI, TFI)
 Indexed_Bootstrap(CSFI, TFI, 10000)
 ```
-
+Running the Bootstrap function that does not use the sample() function with the same seed, we can see that the results are very similar to the Bootstrap function that uses the sample() function. In both cases, increasing the amount of resamples allows the distribution to increasingly approach a normal distribution. And although the *p*-values differ between the four examples, this might be due to the nature of the *p*-value and the variability it holds. In conclusion, we feel safe to assume that the function works properly both with the sample function or with pseudo-randomly generated numbers from a uniform distribution.
 
 ### Exercise 3
+
+Our final resampling function has the purpose of creating an empirical sampling distribution of the mean difference statistic between two numerical vectors. Our decision of using the Bootstrap as the resampling technique yields additional benefits when used for estimation. This is because when using a Bootstrap for estimation purposes, you can gain reliable estimates of the bias of your statistic, the standard error of the sampling distribution and the confidence interval of the true parameter. However, the Bootstrap can not reveal the true parameter itself. In other words, you can know the extent to which your estimator is both biased and efficient.
+
 ```{r}
-## 
+## We create a function that has a similar argument structure as the above resampling functions
 Estimation_Bootstrap <- function(x, y, numtimes = 1000) {
-  ## Initial mean difference:
+  ## First, the function stores the initial mean difference, allowing for missing values:
   initial_diff <- mean(x, na.rm = TRUE) - mean(y, na.rm = TRUE)
   
-  ## Creating space:
+  ## Then the function creates space for the future resampled statistics:
   diff_values <- rep(0, numtimes)
   
   ## The bootstrap:
+  ## For every i in 1 to the specified number of times, do the following:
   for(i in 1:numtimes) {
-    ##
+    ## Create a temporary sample from the concatenated vectors with replacement through the use of 
+    ## the sample() function
     temp_sample <- sample(x = c(x, y), replace = TRUE)
-    ## First n1 (= number of values in group x) of the elements in the temporary sample go
-    ## a new vector called S1
+    ## Assign the first n1 (= equal to the number of values in group x) of the elements in the temporary sample 
+    ## to a new vector called S1
     S1 <- temp_sample[1:length(x)]
-    ## Then the rest of the values (= equal to number of values in group y)
-    ## of the elements in the temporary sample goes to a new vector called S2
+    ## Then assign the rest of the values (= equal to the number of values in group y)
+    ## of the elements in the temporary sample to a new vector called S2
     S2 <- temp_sample[(length(x) + 1):(length(x)+length(y))]
-    ## Now, with two sampled groups based on x and y, we calculate the t-statistic
-    ## and put this value in the ith element of the earlier created space
+    
+    ## Now, with two sampled groups based on x and y, we calculate the mean difference
+    ## and put this value in the ith element of the earlier created space, again allowing for missing values
+    ## in case those were sampled from the concatenated dataset
     diff_values[i] <- mean(S1, na.rm = TRUE) - mean(S2, na.rm = TRUE)
   }
-  ## Relevant aspects of the estimation
-    ## First: a confidence interval of the empirical sampling distribution through quantile()
+  ## Relevant statistics
+  
+  ## First: a confidence interval of the empirical sampling distribution through quantile()
   CI <- quantile(diff_values, p = c(0.025, 0.975))
   ## Then, a histogram with indicators at the 95% confidence interval and at the initial difference value
   hist(diff_values, nclass = 50, main = "Empirical sampling distribution of the mean difference with 95% C.I.")
   abline(v = CI, col = "red")
   abline(v = initial_diff, col = "blue")
-    ## Bias
-      ## bias is the initial difference value minus the mean of the empirical sampling distribution
-    Bias <- initial_diff - mean(diff_values)
-    ## Efficiency: 
-      ## Efficiency is measured by the Mean square error, which is the following
-    MSE <- var(diff_values) + Bias^2
-    ## Consistency
-      ## A statistic is consistent if there is convergence in probability
-      ## So assuming the difference is unbiased, and variance of the mean difference tends to 0 as n tends to infinity
-      ## then it should be a consistent estimator
-  
-    ## Sufficiency
-      ## No idea how we can do this for the mean difference...
-  
-    ## Robustness
-      ## Something is robust if the sampling distribution is not seriously affected by violations of assumptions
-    list_of_information <- list(initial_diff, CI, Bias, MSE)
+    ## The function should also report the bias of the mean difference from the initial sample:
+      ## The bias is equal to the mean of the empirical sampling distribution minus the initial difference value
+    Bias <- mean(diff_values) - initial_diff
+    ## Furthermore, the function should report the efficiency of our estimated mean difference: 
+      ## Efficiency is measured by the Mean square error, which is calculated through the following formula
+    MSE <- var(diff_values, na.rm = TRUE) + Bias^2
+    
+    SE <- sd(diff_values, na.rm = TRUE)
+   
+    ## Finally, we put all relevant information in a list and give all parts apt names
+    list_of_information <- list(initial_diff, CI, Bias, MSE, SE)
     names(list_of_information) <- c("Initial Mean Difference", "95% Confidence Interval of the Empirical Sampling Distribution",
-                                    "Bias of the Mean Difference", "Mean Squared Error")
+                                    "Bias of the Mean Difference", "Mean Squared Error", "Standard Error of the Empirical Sampling Distribution")
+    ## As output, it should return the list of relevant statistics
     return(list_of_information)
 }
 
-## Example using the Flight instruction data:
+## Examples using the Flight instruction data:
+
+set.seed(13)
+
+Estimation_Bootstrap(CSFI, TFI)
 Estimation_Bootstrap(CSFI, TFI, 10000)
-
-## Discussing the aspects of estimation: 
-
 ```
 #### Discussing the aspects of estimation:
+
+In total, an estimator has five properties: (un)biasedness, efficiency, consistency, sufficiency and robustness.
+Biasedness is the extent to which a estimator is biased towards the true value of a parameter (i.e., the difference between the expected value of the estimation and the true parameter). Using the example of the Flight instruction data, we see that the bias is almost equal to the initial mean difference, indicating that it is very biased to the true parameter.
+Efficiency is another measure of the quality of an estimator. It tries to measure how efficient an estimator is at estimating the true parameter. In other words, an estimator that is more efficient, would need less observations in order to be a better efficient. In our function, we tried to measure efficiency by calculating the mean squared error (MSE), which indicates the deviance between the estimator and the true value. Looking at the example of the flight instruction data, we see a MSE of around 4.93. Although hard to interpret, the value is clearly quite some distance away from 0 and hence we can safely assume that the mean difference of the initial sample was not an efficient statistic. This can mainly be attributed due to the large bias the estimator had.
+
+Other properties of estimators are consistency (i.e., whether there is convergence in probability or whether the variance of the parameter tends to 0 when the amount of resamples tends to infinity), sufficiency (i.e., if an estimator explains all possible information about the parameter) and robustness (i.e., whether the sampling distribution of the estimator is not seriously affected by violations of assumptions). However, to include these in a function is tricky as these properties can not simply be calculated and instead have to be proven for every estimator. A researcher can always theorize about them however. For example, the estimation of the mean difference in the Flight instruction data might not be robust to violations due to the low initial sample size.
