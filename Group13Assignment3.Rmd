@@ -1,0 +1,288 @@
+---
+title: "Computational Inference with R: Assignment 3"
+author: "Nina van Gerwen, Katja Sonntag"
+date: "12/18/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Part 1
+
+Exercise 1
+```{r}
+
+
+```
+
+Exercise 2
+```{r}
+
+
+```
+
+
+Part 2
+
+Exercise 1
+```{r}
+
+
+```
+
+Exercise 2
+```{r}
+
+
+```
+
+
+Exercise 3
+```{r}
+
+
+```
+
+=======
+---
+title: "Computational Inference with R: Assignment 3"
+author: "Nina van Gerwen (1860852), Katja Sonntag"
+date: "12/18/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Part 1
+
+### Exercise 1
+```{r}
+```
+
+### Exercise 2
+```{r}
+t.power <- function(mean1, mean2, n1, n2 = n1, sd1, sd2 = sd1, nsim = 1000){
+  lower = qt(.025,df=sum(n1 + n2) - 2)
+  upper = qt(.975,df=sum(n1 + n2) - 2)
+  ts = replicate(nsim,
+                 t.test(rnorm(n1, mean1, sd1),
+                        rnorm(n2, mean2, sd2))$statistic)
+  sum(ts < lower | ts > upper) / nsim
+}
+
+set.seed(13)
+t.power(n1 = 50, n2 = 50, mean1 = 150, mean2 = 160, sd1 = 15, sd2 = 15)
+## OR:
+t.power(mean1 = 150, mean2 = 160, n1 = 50, sd1 = 15)
+```
+
+
+## Part 2
+
+### Exercise 1:
+
+For the hypothesis test through a resampling technique, we have chosen for the resampling technique 'Bootstrap'. We chose this method, because... REASONS (TO DO).
+```{r}
+## Bootstrap function using the sample() function
+
+## First, create a function that can receive three arguments
+## The first and second argument should be vectors containing numerical values that you wish
+## to test between. The third argument is the number of times you would like to estimate
+## the t-statistic through resampling. By default, this value is 1000.
+MyBootstrap <- function(x, y, numtimes = 1000) {
+  ## First, the function should save the initial t-value
+  initial_t <- t.test(x, y)$statistic
+  
+  ## Then, the function creates space for the resampled t-values. :
+  t_values <- rep(0, numtimes)
+  
+  ## The bootstrap:
+    ## For 1 to the specified number of times (default = 1000), do the following:
+  for(i in 1:numtimes) {
+    ## Create a temporary sample with replacement through the sample() function of 
+    ## all the elements in both x and y
+    temp_sample <- sample(x = c(x, y), replace = TRUE)
+    ## From this temporary sample, the first n1 (= equal to the number of observations in group x) 
+    ## of the elements then go to a new vector called S1
+    S1 <- temp_sample[1:length(x)]
+    ## Then the rest of the values from the temporary sample 
+    ## (= equal to number of observations in group y) go to a new vector called S2
+    S2 <- temp_sample[(length(x) + 1):(length(x)+length(y))]
+  
+    ## Now, with two re-sampled groups based on x and y, we calculate the t-statistic
+    ## and put this value in the ith element of the earlier created space
+    t_values[i] <- t.test(S1, S2)$statistic
+  }
+  ## Including relevant statistics
+    ## 95% confidence interval of the estimate
+    CI <- quantile(t_values, p = c(0.025, 0.975))
+    ## Histogram with indicators at the 95% confidence interval
+    hist(t_values, nclass = 50, main = "Empirical sampling distribution of the t-statistic with 95% Confidence Interval")
+    abline(v = CI, col = "red")
+    abline(v = initial_t, col = "blue")
+    ## probability of the initial t-value -- perhaps if-statement
+    p_value <- sum(t_values > abs(initial_t))/numtimes
+    
+    ## Creating a list of all the relevant information and giving them apt names
+    list_of_statistics <- list(initial_t, CI, p_value)
+    names(list_of_statistics) <- c("Initial t-statistic", "Upper and lower bound of the 95% C.I. of the empirical sampling distribution", 
+                                   "Probability of the initial t-value given the distribution")
+  ## Finally, as output, the function should return the list of relevant information
+  return(list_of_statistics)
+
+}
+
+## Creating the flight data:
+
+CSFI <- c(2, 5, 5, 6, 6, 7, 8, 9)
+TFI <- c(1,1,2,3,3,4,5,7,7,8)
+
+## Example using the Flight instruction data
+
+MyBootstrap(CSFI, TFI, 10000)
+
+```
+
+### Exercise 2
+
+```{r}
+## Bootstrap function without the use of the sample() function
+
+## Similar to before, we create a function that can have up to three arguments
+## The first and second arguments should correspond to two numerical vectors
+## that one wishes to perform a t-test between.
+## The third argument is the number of times they would like to resample
+## the statistic of interest. By default this value is 1000.
+Indexed_Bootstrap <- function(x, y, numtimes = 1000) {
+  ## First, the function shoudl store the initial t-value
+  initial_t <- t.test(x, y)$statistic
+  
+  ## Then, it should create space for the statistic that is to be resampled:
+  t_values <- rep(0, numtimes)
+  
+  ## The bootstrap:
+  ## First, we merge the data of both datasets
+  merged_data <- c(x, y)
+  ## Then, we make space for the temporary sample
+  temp_sample <- rep(0, length(merged_data))
+  ## Then, the bootstrapping of the t-statistic starts as follows:
+  for(i in 1:numtimes) {
+    ## We create a temporary sample with replacement with the following method:
+    ## First, a for-loop is created that starts at 1 and ends at the length of the merged dataset
+    for(j in 1:length(merged_data)) {
+      ## Then, for every loop, we generate a pseudo-random number from a uniform distribution 
+      ## that is from length .5001 to the length of the merged dataset + 0.4999 and then we round this to a whole number
+          ## The reason the uniform distribution ranges from .5001 to the legnth of the dataset 0.4999, is because
+          ## we use the function round(). If we were to only range it from 1 to the length of the dataset,
+          ## the first and last element would have half the probability of being selected compared to other elements.
+      ## We want a uniform distribution so that every whole rounded number has an equal chance of being chosen
+      Y <- round(runif(1, 0.5001, (length(merged_data) + 0.4999)))
+      ## Finally, from the merged dataset, we take element that corresponds to the rounded pseudo-randomly generated number
+      ## and add this to the temporary sample in the jth spot
+      temp_sample[j] <- merged_data[Y]
+    ## This loop is then repeated until we have a dataset that is of equal length to the merged dataset
+    }
+    ## Then, from this temporary sample, the first n1 (= number of values in group x) 
+    ## of the elements in the temporary sample go to a new vector called S1
+    S1 <- temp_sample[1:length(x)]
+    ## And the rest of the values (= equal to number of values in group y)
+    ## of the elements in the temporary sample go to a new vector called S2
+    S2 <- temp_sample[(length(x) + 1):(length(x)+length(y))]
+    
+    ## Now, with two sampled groups based on x and y, we calculate the t-statistic
+    ## and put this value in the ith element of the earlier created space for the t-statistic
+    t_values[i] <- t.test(S1, S2)$statistic
+  
+  }
+  ## To include relevant statistics concerning the resampled statistic,
+  ## We create a confidence interval of the empirical sampling distribution
+  CI <- quantile(t_values, p = c(0.025, 0.975))
+  ## Furthermore, the function should show a histogram of the empirical sampling distribution
+  ## with indicators at the 95% confidence interval and at the initial t-value
+  hist(t_values, nclass = 50, main = "Empirical sampling distribution of the t-statistic with 95% Confidence Interval")
+  abline(v = CI, col = "red")
+  abline(v = initial_t, col = "blue")
+  ## Finally, the function should give the probability of the initial t-value
+  ## given the empirical sampling distribution
+  p_value <- sum(t_values > abs(initial_t))/numtimes
+  
+  ## Then, we create a list of all the relevant information and give all elements apt names
+  list_of_statistics <- list(initial_t, CI, p_value)
+  names(list_of_statistics) <- c("Initial t-statistic", "Upper and lower bound of the 95% C.I. of the empirical sampling distribution", 
+                                 "Probability of the initial t-value given the distribution")
+  ## Finally, as output, the function should return the list of relevant information
+  return(list_of_statistics)
+}
+
+## Example using the Flight instruction data
+
+Indexed_Bootstrap(CSFI, TFI, 10000)
+```
+
+
+### Exercise 3
+```{r}
+## 
+Estimation_Bootstrap <- function(x, y, numtimes = 1000) {
+  ## Initial mean difference:
+  initial_diff <- mean(x, na.rm = TRUE) - mean(y, na.rm = TRUE)
+  
+  ## Creating space:
+  diff_values <- rep(0, numtimes)
+  
+  ## The bootstrap:
+  for(i in 1:numtimes) {
+    ##
+    temp_sample <- sample(x = c(x, y), replace = TRUE)
+    ## First n1 (= number of values in group x) of the elements in the temporary sample go
+    ## a new vector called S1
+    S1 <- temp_sample[1:length(x)]
+    ## Then the rest of the values (= equal to number of values in group y)
+    ## of the elements in the temporary sample goes to a new vector called S2
+    S2 <- temp_sample[(length(x) + 1):(length(x)+length(y))]
+    ## Now, with two sampled groups based on x and y, we calculate the t-statistic
+    ## and put this value in the ith element of the earlier created space
+    diff_values[i] <- mean(S1, na.rm = TRUE) - mean(S2, na.rm = TRUE)
+  }
+  ## Relevant aspects of the estimation
+    ## First: a confidence interval of the empirical sampling distribution through quantile()
+  CI <- quantile(diff_values, p = c(0.025, 0.975))
+  ## Then, a histogram with indicators at the 95% confidence interval and at the initial difference value
+  hist(diff_values, nclass = 50, main = "Empirical sampling distribution of the mean difference with 95% C.I.")
+  abline(v = CI, col = "red")
+  abline(v = initial_diff, col = "blue")
+    ## Bias
+      ## bias is the initial difference value minus the mean of the empirical sampling distribution
+    Bias <- initial_diff - mean(diff_values)
+    ## Efficiency: 
+      ## Efficiency is measured by the Mean square error, which is the following
+    MSE <- var(diff_values) + Bias^2
+    ## Consistency
+      ## A statistic is consistent if there is convergence in probability
+      ## So assuming the difference is unbiased, and variance of the mean difference tends to 0 as n tends to infinity
+      ## then it should be a consistent estimator
+  
+    ## Sufficiency
+      ## No idea how we can do this for the mean difference...
+  
+    ## Robustness
+      ## Something is robust if the sampling distribution is not seriously affected by violations of assumptions
+    list_of_information <- list(initial_diff, CI, Bias, MSE)
+    names(list_of_information) <- c("Initial Mean Difference", "95% Confidence Interval of the Empirical Sampling Distribution",
+                                    "Bias of the Mean Difference", "Mean Squared Error")
+    return(list_of_information)
+}
+
+## Example using the Flight instruction data:
+Estimation_Bootstrap(CSFI, TFI, 10000)
+
+## Discussing the aspects of estimation: 
+
+```
+#### Discussing the aspects of estimation:
